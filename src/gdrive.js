@@ -5,13 +5,43 @@ export class GDriveClient {
     TOKEN_PATH = 'config/secrets/token.json';
 
     client;
+    clientDirId = "";
+    defaultClientDirName = "ebooks";
 
-    constructor(TOKEN_PATH = null) {
+    constructor(TOKEN_PATH = null, CLIENT_DIR_ID = null) {
         if (TOKEN_PATH) {
             this.TOKEN_PATH = TOKEN_PATH;
         }
+        if (CLIENT_DIR_ID) {
+            this.clientDirId = CLIENT_DIR_ID;
+        }
         let token = this.getToken();
         this.client = this.createDriveClient(token);
+        this.findDirId();
+    }
+
+    async findDirId() {
+
+        if (!this.client) {
+            console.error('GDRIVE - Searching parent folder: Error client not found');
+            return;
+        }
+        let query = { pageSize: 10, fields: 'nextPageToken, files(id, name)' };
+        const res = await this.client.files.list(query);
+        const files = res.data.files;
+        if (files.length === 0) {
+            console.error('GDRIVE - Searching parent folder: No files found.');
+            return;
+        }
+        files.map((file) => {
+            if (file.name === this.defaultClientDirName) {
+                this.clientDirId = file.id;
+            }
+        });
+        if (!this.clientDirId) {
+            console.error('GDRIVE - Searching parent folder: No directory found.');
+            return;
+        }
     }
 
     getToken() {
@@ -47,10 +77,11 @@ export class GDriveClient {
             console.error('Error client not found');
             return;
         }
-        const res = await this.client.files.list({
-            pageSize: 10,
-            fields: 'nextPageToken, files(id, name)',
-        });
+        let query = { pageSize: 10, fields: 'nextPageToken, files(id, name)' };
+        if (this.clientDirId) {
+            query.q = `'${this.clientDirId}' in parents`;
+        }
+        const res = await this.client.files.list(query);
 
         const files = res.data.files;
         if (files.length === 0) {
@@ -66,6 +97,25 @@ export class GDriveClient {
         return files;
     }
 
+    async uploadFile(file) {
+        if (!this.client) {
+            console.error('Error client not found');
+            return;
+        }
+
+        const res = await this.client.files.create({
+            requestBody: {
+                name: file.name,
+                mimeType: file.mimeType,
+            },
+            media: {
+                mimeType: file.mimeType,
+                body: fs.createReadStream(file.path),
+            },
+        });
+
+        console.log();
+    }
 
 
 

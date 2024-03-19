@@ -9,17 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // set root to public folder
 const publicRoot = __dirname + "/public";
-
 // gdrive
-// const gdrive = new GDriveClient();
-// try {
-//     const files = await gdrive.getAllChildren();
-//     console.log(files); // Or do whatever you want with the files
-// } catch (error) {
-//     console.error('Error fetching files:', error);
-//     // stop the server
-//     process.exit(1);
-// }
+const gdrive = new GDriveClient();
+
 
 // Configurar Multer para manejar la carga de archivos
 const storage = multer.diskStorage({
@@ -70,9 +62,25 @@ app.get("/temp-admin", (req, res) => {
     res.sendFile("temp-admin.html", { root: publicRoot });
 });
 
-app.post('/uploadBook', upload.single('book'), (req, res, next) => {
+app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
     if (!req.file) {
         return res.status(400).send('No se ha seleccionado ningún archivo');
+    }
+    try {
+        await gdrive.getAllChildren();
+        let fileObject = {
+            name: req.file.filename,
+            path: req.file.path,
+            mimeType: req.file.mimetype,
+            path: req.file.path,
+        }
+        await gdrive.uploadFile(fileObject);
+
+        console.log(files); // Or do whatever you want with the files
+    } catch (error) {
+        console.error('Error fetching files:', error);
+        // stop the server
+        process.exit(1);
     }
     res.send('Archivo subido exitosamente');
 });
