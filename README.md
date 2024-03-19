@@ -10,6 +10,18 @@ Primer de tot s'ha de afegir el fitxer `credentials.json` a la ruta `config/secr
 cd config/secrets
 node ../../src/setup_gdrive.js
 ```
+Per ultim, afegim el callback en l'script del token, per lo que la seva estructura quedaria aixi:
+```json
+{
+    "type": "authorized_user",
+    "client_id": "********",
+    "client_secret": "********",
+    "refresh_token": "********",
+    "redirect_uris": [
+        "http://localhost:3000/oauth2callback"
+    ]
+}
+```
 
 # Admin
 L'admin pot fer les seguents accions en el panell d'administracio
