@@ -9,9 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // set root to public folder
 const publicRoot = __dirname + "/public";
-// gdrive
-const gdrive = new GDriveClient();
 
+// get previous directory to current one 
+const projectPath = path.resolve(__dirname, '..');
+
+// setup gdrive
+const gdrive = new GDriveClient(path.resolve(projectPath, "credentials.json"));
 
 // Configurar Multer para manejar la carga de archivos
 const storage = multer.diskStorage({
@@ -42,19 +45,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/books", (req, res) => {
-    // read index.html inside public
-    const books = ["Cien años de soledad, de Gabriel García Márquez.  469 puntos",
-        "El señor de los anillos (Trilogía), de J. R. R. Tolkien.  389 puntos",
-        "1984, de George Orwell.  382  puntos",
-        "Un mundo feliz, de Aldous Huxley.  374  puntos",
-        "Orgullo y prejuicio, de Jane Austen.  341  puntos",
-        "Crimen y castigo, de Fiódor Dostoyevski.  324  puntos",
-        "Lolita, de Vladimir Nabokov.  318  puntos",
-        "Ulises, de James Joyce.  311  puntos",
-        "Madame Bovary, de Gustave Flaubert.  310  puntos",
-        "En busca del tiempo perdido, de Marcel Proust.  304  puntos"]
+    const books = gdrive.getAllChildren();
 
-    res.json(books);
+    books.then((books) => {
+        res.json(books);
+    });
 });
 
 app.get("/temp-admin", (req, res) => {
@@ -67,20 +62,26 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
         return res.status(400).send('No se ha seleccionado ningún archivo');
     }
     try {
-        await gdrive.getAllChildren();
+        // await gdrive.getAllChildren();
         let fileObject = {
             name: req.file.filename,
             path: req.file.path,
             mimeType: req.file.mimetype,
             path: req.file.path,
         }
-        await gdrive.uploadFile(fileObject);
-
-        console.log(files); // Or do whatever you want with the files
+        let uploaded = await gdrive.uploadFile(fileObject);
+        if (uploaded) {
+            // delete file from temp
+            fs.unlink(req.file.path, (err) => {
+                if (err) {
+                    console.error('Error deleting file:', err);
+                    return;
+                }
+                console.log('File deleted');
+            });
+        }
     } catch (error) {
         console.error('Error fetching files:', error);
-        // stop the server
-        process.exit(1);
     }
     res.send('Archivo subido exitosamente');
 });

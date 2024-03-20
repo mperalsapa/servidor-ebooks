@@ -1,22 +1,25 @@
 import fs from 'node:fs';
 import { google } from 'googleapis';
 
+
+
 export class GDriveClient {
-    TOKEN_PATH = 'config/secrets/token.json';
+    CREDENTIALS_PATH = 'config/secrets/token.json';
 
     client;
-    clientDirId = "";
+    clientDirId = "root";
     defaultClientDirName = "ebooks";
 
-    constructor(TOKEN_PATH = null, CLIENT_DIR_ID = null) {
-        if (TOKEN_PATH) {
-            this.TOKEN_PATH = TOKEN_PATH;
+    constructor(CREDENTIALS_PATH = null, CLIENT_DIR_ID = null) {
+        if (CREDENTIALS_PATH) {
+            this.CREDENTIALS_PATH = CREDENTIALS_PATH;
         }
+
         if (CLIENT_DIR_ID) {
             this.clientDirId = CLIENT_DIR_ID;
         }
-        let token = this.getToken();
-        this.client = this.createDriveClient(token);
+
+        this.client = this.createDriveClient(this.CREDENTIALS_PATH);
         this.findDirId();
     }
 
@@ -31,10 +34,13 @@ export class GDriveClient {
         const files = res.data.files;
         if (files.length === 0) {
             console.error('GDRIVE - Searching parent folder: No files found.');
+            this.createDir(this.defaultClientDirName);
+            this.findDirId();
             return;
         }
         files.map((file) => {
             if (file.name === this.defaultClientDirName) {
+                console.log('GDRIVE - Searching parent folder: Found directory id = ', file.id)
                 this.clientDirId = file.id;
             }
         });
@@ -44,35 +50,19 @@ export class GDriveClient {
         }
     }
 
-    getToken() {
-        if (!fs.existsSync(this.TOKEN_PATH)) {
-            console.error('Token file not found, run "node src/setup_gdrive.js" to create it. Remember to locate your cwd to the config folder.');
+    createDriveClient(credentials) {
+        if (!credentials) {
+            console.error("Credentials file not found. You need to specify a credentials file path.");
             return false;
         }
 
-        const content = fs.readFileSync(this.TOKEN_PATH);
-        return JSON.parse(content)
+        const scopes = ["https://www.googleapis.com/auth/drive"];
+        const auth = new google.auth.GoogleAuth({ keyFile: credentials, scopes: scopes });
+        console.log(auth)
+        return google.drive({ version: "v3", auth });
     }
 
-    createDriveClient(token) {
-        if (!token) {
-            console.error('Error parsing token file: ', err);
-            return false;
-        }
-
-        if (!token.client_id || !token.client_secret || !token.redirect_uris[0] || !token.refresh_token) {
-            console.error('Token file is missing required fields. Run "node src/setup_gdrive.js" to create a new token file.');
-            return false;
-        }
-
-        this.client = google.auth.fromJSON(token);
-        // this.client = new google.auth.OAuth2(token.client_id, token.client_secret, token.redirect_uris[0]);
-        // this.client.setCredentials({ refresh_token: token.refresh_token });
-
-        return google.drive({ version: 'v3', auth: this.client });
-    }
-
-    async getAllChildren() {
+    async getAllChildren(folderId = this.clientDirId) {
         if (!this.client) {
             console.error('Error client not found');
             return;
@@ -84,17 +74,26 @@ export class GDriveClient {
         const res = await this.client.files.list(query);
 
         const files = res.data.files;
-        if (files.length === 0) {
-            console.error('No files found.');
+        return files;
+    }
+
+    async createDir(folderName) {
+        if (!this.client) {
+            console.error('Error client not found');
             return;
         }
-
-        console.log('Files:');
-        files.map((file) => {
-            console.log(`${file.name} (${file.id})`);
+        if (!folderName) {
+            console.error('Error name not specified');
+            return;
+        }
+        await this.client.files.create({
+            requestBody: {
+                name: folderName,
+                mimeType: 'application/vnd.google-apps.folder',
+                parents: [this.clientDirId],
+            },
         });
 
-        return files;
     }
 
     async uploadFile(file) {
@@ -103,20 +102,30 @@ export class GDriveClient {
             return;
         }
 
-        const res = await this.client.files.create({
+        await this.client.files.create({
             requestBody: {
                 name: file.name,
                 mimeType: file.mimeType,
+                parents: [this.clientDirId],
             },
             media: {
                 mimeType: file.mimeType,
                 body: fs.createReadStream(file.path),
             },
         });
-
-        console.log();
     }
 
-
-
+    async deleteFile(fileId) {
+        if (!this.client) {
+            console.error('Error client not found');
+            return;
+        }
+        if (!fileId) {
+            console.error('Error fileId not specified');
+            return;
+        }
+        await this.client.files.delete({
+            fileId: fileId,
+        });
+    }
 }
