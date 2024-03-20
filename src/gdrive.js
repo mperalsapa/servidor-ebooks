@@ -58,7 +58,6 @@ export class GDriveClient {
 
         const scopes = ["https://www.googleapis.com/auth/drive"];
         const auth = new google.auth.GoogleAuth({ keyFile: credentials, scopes: scopes });
-        console.log(auth)
         return google.drive({ version: "v3", auth });
     }
 

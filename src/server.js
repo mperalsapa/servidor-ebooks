@@ -86,7 +86,6 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
     res.send('Archivo subido exitosamente');
 });
 
-console.log(publicRoot)
 app.listen(3000, () => {
     console.log("Server started on http://localhost:3000");
 });
