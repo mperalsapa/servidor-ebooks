@@ -3,6 +3,7 @@ import express from "express";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from "multer";
+import fs from 'fs';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -21,8 +22,8 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'temp/'); // Define el directorio donde se almacenarán los archivos
     },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // Define el nombre del archivo
+    filename: function (req, file, cb) { // Define el nombre del archivo. Respetando el nombre original reemplazando espacios por guiones bajos
+        cb(null, file.originalname.replace(/ /g, "_"));
     }
 });
 // Función para filtrar los archivos por tipo MIME
@@ -70,19 +71,18 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
             path: req.file.path,
         }
         let uploaded = await gdrive.uploadFile(fileObject);
-        if (uploaded) {
-            // delete file from temp
-            fs.unlink(req.file.path, (err) => {
-                if (err) {
-                    console.error('Error deleting file:', err);
-                    return;
-                }
-                console.log('File deleted');
-            });
-        }
+        fs.unlink(req.file.path, (err) => {
+            if (err) {
+                console.error('Error deleting file:', err);
+                return;
+            }
+            console.log('File deleted');
+        });
     } catch (error) {
         console.error('Error fetching files:', error);
     }
+
+
     res.send('Archivo subido exitosamente');
 });
 

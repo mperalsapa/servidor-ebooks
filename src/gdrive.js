@@ -76,7 +76,7 @@ export class GDriveClient {
         return files;
     }
 
-    async createDir(folderName) {
+    async createDir(folderName, parentId = this.clientDirId) {
         if (!this.client) {
             console.error('Error client not found');
             return;
@@ -89,7 +89,7 @@ export class GDriveClient {
             requestBody: {
                 name: folderName,
                 mimeType: 'application/vnd.google-apps.folder',
-                parents: [this.clientDirId],
+                parents: [parentId],
             },
         });
 
@@ -101,7 +101,7 @@ export class GDriveClient {
             return;
         }
 
-        await this.client.files.create({
+        const response = await this.client.files.create({
             requestBody: {
                 name: file.name,
                 mimeType: file.mimeType,
@@ -112,6 +112,8 @@ export class GDriveClient {
                 body: fs.createReadStream(file.path),
             },
         });
+
+        return response.data;
     }
 
     async deleteFile(fileId) {
