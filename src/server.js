@@ -3,6 +3,7 @@ import express from "express";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from "multer";
+import JSZip, { JSzip } from "jszip";
 import fs from 'fs';
 
 const app = express();
@@ -18,7 +19,7 @@ const projectPath = path.resolve(__dirname, '..');
 app.use("/assets", express.static(path.resolve(publicRoot, "assets")));
 
 // setup gdrive
-const gdrive = new GDriveClient(path.resolve(projectPath,'./credentials.json'));
+const gdrive = new GDriveClient(path.resolve(projectPath, './credentials.json'));
 
 // Configurar Multer para manejar la carga de archivos
 const storage = multer.diskStorage({
@@ -42,6 +43,12 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter
 });
+
+// configuracio de JSZIP
+
+const zip = new JSZip();
+
+// setup express routes -------------------------------------------
 
 app.get("/", (req, res) => {
     // read index.html inside public
@@ -91,18 +98,29 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
     }
 
 
-    res.json({ok:true});
+    res.json({ ok: true });
 });
 
 
 app.delete('/eliminarArxiu/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
     await gdrive.deleteFile(fileId);
-     
-     res.json({ok:true});
-  
-   });
-   
+
+    res.json({ ok: true });
+
+});
+
+app.get("/llibre/:fileId", async (req, res) => {
+    const fileId = req.params.fileId;
+    // comprovem si el llibre existeix en el sistema de fitxers local
+    if (!fs.existsSync(`temp/${fileId}`)) {
+        // si no existeix, el descarreguem de Google Drive
+        const book = await gdrive.downloadFile(fileId);
+        gdrive.downloadFile(fileId, 'temp/downloads', book.name);
+
+    }
+});
+
 
 app.listen(3000, () => {
     console.log("Server started on http://localhost:3000");

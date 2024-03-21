@@ -116,7 +116,7 @@ export class GDriveClient {
         return response.data;
     }
 
-    async  deleteFile(fileId) {
+    async deleteFile(fileId) {
         if (!this.client) {
             console.error('Error client not found');
             return;
@@ -129,5 +129,43 @@ export class GDriveClient {
          
             fileId: fileId,
         });
+    }
+
+    async downloadFile(fileId, route, fileName) {
+        if (!this.client) {
+            console.error('Error client not found');
+            return;
+        }
+        if (!fileId) {
+            console.error('Error fileId not specified');
+            return;
+        }
+        if (!route) {
+            console.error('Error route not specified');
+            return;
+        }
+        if (!fileName) {
+            fileName = fileId;
+        }
+
+        const dest = fs.createWriteStream(`${route}/${fileName}`);
+        await this.client.files.get(
+            { fileId: fileId },
+            { responseType: 'stream' },
+            (err, res) => {
+                if (err) {
+                    console.error('Error downloading file:', err);
+                    return;
+                }
+                res.data
+                    .on('end', () => {
+                        console.log('File downloaded');
+                    })
+                    .on('error', (err) => {
+                        console.error('Error downloading file:', err);
+                    })
+                    .pipe(dest);
+            }
+        );
     }
 }
