@@ -3,12 +3,17 @@ import express from "express";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from "multer";
-import JSZip, { JSzip } from "jszip";
+import JSZip from "jszip";
+import * as EPUB from "./epub.js";
 import fs from 'fs';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ebooksPath = path.resolve(__dirname, '../ebooks');
+
+// create ebooks folder if it doesn't exist
+if (!fs.existsSync(ebooksPath)) fs.mkdirSync(ebooksPath);
 // set root to public folder
 const publicRoot = __dirname + "/public";
 
@@ -110,15 +115,15 @@ app.delete('/eliminarArxiu/:fileId', async (req, res) => {
 
 });
 
+app.get("/llibre/:fileId/:chapter", async (req, res) => {
+    const fileId = req.params.fileId;
+    const chapter = req.params.chapter;
+
+})
+
 app.get("/llibre/:fileId", async (req, res) => {
     const fileId = req.params.fileId;
-    // comprovem si el llibre existeix en el sistema de fitxers local
-    if (!fs.existsSync(`temp/${fileId}`)) {
-        // si no existeix, el descarreguem de Google Drive
-        const book = await gdrive.downloadFile(fileId);
-        gdrive.downloadFile(fileId, 'temp/downloads', book.name);
 
-    }
 });
 
 

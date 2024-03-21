@@ -1,3 +1,4 @@
 config/secrets
 node_modules
 credentials.json
+ebooks
