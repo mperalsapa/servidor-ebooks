@@ -20,7 +20,6 @@ export async function readChapter(ebookPath, chapter = 0) {
 
     // ara que tenim el fitxer container, llegim el fitxer com a string
     containerXml = containerXml.toString();
-    console.log(containerXml)
     const doc = new DOMParser().parseFromString(containerXml, 'text/xml');
     if (!doc) {
         console.error('Error reading container.xml');

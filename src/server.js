@@ -120,8 +120,6 @@ app.delete('/eliminarArxiu/:fileId', async (req, res) => {
 app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const fileId = req.params.fileId;
     const chapter = req.params.chapter;
-
-    console.log("Comprovant ", path.resolve(ebooksPath, `${fileId}`))
     // comprovem si el llibre existeix en el sistema de fitxers local
     if (!fs.existsSync(path.resolve(ebooksPath, `${fileId}`))) {
         // si no existeix, el descarreguem de Google Drive
@@ -137,28 +135,6 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const chapterPath = path.join(fileId, chapterData.chapterPath);
     return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
 })
-
-app.get("/llibre/:fileId", async (req, res) => {
-    const fileId = req.params.fileId;
-    console.log("Comprovant ", path.resolve(ebooksPath, `${fileId}`))
-    // comprovem si el llibre existeix en el sistema de fitxers local
-    if (!fs.existsSync(path.resolve(ebooksPath, `${fileId}`))) {
-        // si no existeix, el descarreguem de Google Drive
-        // const book = await gdrive.downloadFile(fileId);
-        // gdrive.downloadFile(fileId, 'temp/downloads', book.name);
-        // unzip en public/assets
-        console.log("Book doesn't exist, downloading...")
-        return res.send("Book doesn't exist, downloading...");
-    }
-
-    const ebookPath = path.resolve(ebooksPath, fileId);
-    const chapterData = await EPUB.readChapter(ebookPath, 1);
-    const chapterPath = path.join(fileId, chapterData.chapterPath)
-
-    res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
-
-});
-
 
 app.listen(3000, () => {
     console.log("Server started on http://localhost:3000");
