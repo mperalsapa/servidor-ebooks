@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(books)
     for (let book of books) {
         let bookName = book.name.replace(/.epub/g, '');
+        bookName = bookName.replace(/_/g, ' ');
         bookName = bookName.replace(/-/g, ' ');
         bookName = bookName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         html += `<button type="button" class="list-group-item list-group-item-action" data-id="${book.id}">${bookName}</button>`;
