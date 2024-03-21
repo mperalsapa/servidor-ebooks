@@ -14,6 +14,9 @@ const publicRoot = __dirname + "/public";
 // get previous directory to current one 
 const projectPath = path.resolve(__dirname, '..');
 
+// setup static files
+app.use("/assets", express.static(path.resolve(publicRoot, "assets")));
+
 // setup gdrive
 const gdrive = new GDriveClient(path.resolve(projectPath, "credentials.json"));
 
@@ -43,6 +46,11 @@ const upload = multer({
 app.get("/", (req, res) => {
     // read index.html inside public
     res.sendFile("index.html", { root: publicRoot });
+});
+
+app.get("/llibres", (req, res) => {
+
+    res.sendFile("client.html", { root: publicRoot });
 });
 
 app.get("/books", (req, res) => {
