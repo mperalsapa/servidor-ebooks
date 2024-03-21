@@ -116,7 +116,7 @@ export class GDriveClient {
         return response.data;
     }
 
-    async deleteFile(fileId) {
+    async  deleteFile(fileId) {
         if (!this.client) {
             console.error('Error client not found');
             return;

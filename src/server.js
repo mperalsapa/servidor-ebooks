@@ -18,7 +18,7 @@ const projectPath = path.resolve(__dirname, '..');
 app.use("/assets", express.static(path.resolve(publicRoot, "assets")));
 
 // setup gdrive
-const gdrive = new GDriveClient(path.resolve(projectPath, "credentials.json"));
+const gdrive = new GDriveClient(path.resolve(projectPath,'./credentials.json'));
 
 // Configurar Multer para manejar la carga de archivos
 const storage = multer.diskStorage({
@@ -61,9 +61,9 @@ app.get("/books", (req, res) => {
     });
 });
 
-app.get("/temp-admin", (req, res) => {
+app.get("/administrador", (req, res) => {
     // read index.html inside public
-    res.sendFile("temp-admin.html", { root: publicRoot });
+    res.sendFile("administrador.html", { root: publicRoot });
 });
 
 app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
@@ -93,6 +93,16 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
 
     res.send('Archivo subido exitosamente');
 });
+
+
+app.delete('/eliminarArxiu/:fileId', async (req, res) => {
+    const fileId = req.params.fileId;
+     gdrive.deleteFile(fileId);
+     
+     res.json({ok:true});
+  
+   });
+   
 
 app.listen(3000, () => {
     console.log("Server started on http://localhost:3000");
