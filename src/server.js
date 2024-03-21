@@ -91,13 +91,13 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
     }
 
 
-    res.send('Archivo subido exitosamente');
+    res.json({ok:true});
 });
 
 
 app.delete('/eliminarArxiu/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
-     gdrive.deleteFile(fileId);
+    await gdrive.deleteFile(fileId);
      
      res.json({ok:true});
   

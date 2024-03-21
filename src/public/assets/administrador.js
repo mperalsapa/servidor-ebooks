@@ -1,4 +1,4 @@
-
+/*
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/books')
     .then(response => response.json())
@@ -73,27 +73,31 @@ function pujarArxiu(file) {
     })
    // .catch(error => console.error('Error al pujar l\'arxiu:', error));
     
-}
+} */
 
-/*
-function actualitzarLlistaArxius() {
+
+document.addEventListener('DOMContentLoaded', () => {
+    mostrarArxius();
+});
+
+function mostrarArxius() {
+    const tbody = document.getElementById('arxius');
+    tbody.innerHTML = ''; // Limpiar el contenido existente
+
     fetch('/books')
     .then(response => response.json())
-    .then(files => {
-        const tbody = document.getElementById('arxius');
-        tbody.innerHTML = ''; // Esborra els arxius actuals
-        files.forEach(file => {
+    .then(files =>{
+        files.forEach(file =>{
             const tr = document.createElement('tr');
             const td = document.createElement('td');
             td.textContent = file.name;
             const botoEliminar = document.createElement('button');
             botoEliminar.textContent = 'Eliminar';
-            botoEliminar.addEventListener('click', () => {
+            botoEliminar.addEventListener('click',() => {
                 fetch(`/eliminarArxiu/${file.id}`, {method: 'DELETE'})
                 .then(response => {
                     if(response.ok) {
-                        tr.remove();
-                        actualitzarLlistaArxius(); // Actualitza la llista després d'eliminar
+                        mostrarArxius(); // Recargar la lista de archivos
                     } else {
                         console.error('Error al esborrar el arxiu');
                     }
@@ -104,32 +108,47 @@ function actualitzarLlistaArxius() {
             tr.appendChild(botoEliminar);
             tbody.appendChild(tr);
         });
-    })
-    .catch(error => console.error('Error al obtenir els arxius:', error));
+    });
 }
 
-// Crida a actualitzarLlistaArxius quan es carrega la pàgina
-document.addEventListener('DOMContentLoaded', actualitzarLlistaArxius);
+document.addEventListener('DOMContentLoaded',() =>{
+    const dropzone = document.getElementById('dropzone');
 
-// Actualitza la llista d'arxius després de pujar un arxiu
+    dropzone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropzone.style.backgroundColor = '#eee';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.style.backgroundColor = '#fff';
+    });
+
+    dropzone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropzone.style.backgroundColor = '#fff';
+        const files = event.dataTransfer.files;
+        gestionarArxius(files);
+    });
+});
+
 function gestionarArxius(files) {
     ([...files]).forEach(pujarArxiu);
-    actualitzarLlistaArxius(); // Actualitza la llista després de pujar
 }
 
 function pujarArxiu(file) {
     let url = './uploadBook';
     let formData = new FormData();
 
-    formData.append('book', file);
+    formData.append('book',file);
 
     fetch(url, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => response.json()) // Retorna la resposta com a JSON
     .then(data => {
-        console.log('Arxiu pujat correctament:', data);
+        console.log('Arxiu pujat correctament:', data); // Accedeix a la resposta aquí
+        mostrarArxius(); // Recargar la lista de archivos
     })
-    .catch(error => console.error('Error al pujar l\'arxiu:', error));
-} */
+}
+

@@ -125,7 +125,8 @@ export class GDriveClient {
             console.error('Error fileId not specified');
             return;
         }
-        await this.client.files.delete({
+       return await this.client.files.delete({
+         
             fileId: fileId,
         });
     }
