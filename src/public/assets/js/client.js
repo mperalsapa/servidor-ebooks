@@ -6,6 +6,20 @@ async function readChapter(bookId, chapter = 1) {
     return data;
 }
 
+function getSavedChapter(bookId) {
+    // read from local storage if a stored chapter exists based on bookId
+    if (localStorage.getItem(bookId)) {
+        return localStorage.getItem(bookId);
+    }
+    return 1;
+}
+
+function saveChapter(bookId, chapter) {
+    // save the chapter to local storage
+    localStorage.setItem(bookId, chapter);
+    return chapter;
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     let books = await BooksAPI.getBooks();
@@ -23,14 +37,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     $(".book-list button").click(async function () {
         let bookId = $(this).data("id");
+        $("#book-frame").data("book-id", bookId);
 
-        let chapter = 1;
-        let chapterData = await readChapter(bookId, chapter);
-        console.log(chapterData);
+        let chapterData = await readChapter(bookId, getSavedChapter(bookId));
+        saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
+
+
         $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
 
         $(".modal-title").text($(this).text());
         $("#book-viewer").modal("show");
+
+    });
+
+    $("#next-chapter").click(async function () {
+
+        let bookId = $("#book-frame").data("book-id");
+        let chapterData = await readChapter(bookId, parseInt(getSavedChapter(bookId)) + 1);
+        saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
+        console.log(chapterData);
+        $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
+    });
+
+    $("#previous-chapter").click(async function () {
+        let bookId = $("#book-frame").data("book-id");
+        let chapterData = await readChapter(bookId, parseInt(getSavedChapter(bookId)) - 1);
+        saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
+        console.log(chapterData);
+        $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
     });
 
     $("#closeBookViewer").click(function () {
