@@ -1,9 +1,23 @@
 import * as BooksAPI from './books.js';
 
-async function readChapter(bookId, chapter = 1) {
+async function getChapter(bookId, chapter = 1) {
     let response = await fetch(`/llibre/${bookId}/${chapter}`);
     let data = await response.json();
     return data;
+}
+
+function displayChapter(chapterData) {
+    $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
+    // set iframe document styles
+    $("#book-frame").on("load", function () {
+        let iframe = $("#book-frame").contents();
+        // iframe.find("body").css("background-color", "black");
+        // iframe.find("body").css("color", "white");
+        iframe.find("body").css("font-family", "Arial, sans-serif");
+        iframe.find("body").css("font-size", "1.2em");
+        iframe.find("body").css("max-width", "21cm");
+        iframe.find("body").css("margin-inline", "auto");
+    });
 }
 
 function getSavedChapter(bookId) {
@@ -38,33 +52,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     $(".book-list button").click(async function () {
         let bookId = $(this).data("id");
         $("#book-frame").data("book-id", bookId);
-
-        let chapterData = await readChapter(bookId, getSavedChapter(bookId));
-        saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
-
-
-        $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
-
         $(".modal-title").text($(this).text());
         $("#book-viewer").modal("show");
 
+        let chapterData = await getChapter(bookId, getSavedChapter(bookId));
+        saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
+
+        displayChapter(chapterData);
     });
 
     $("#next-chapter").click(async function () {
 
         let bookId = $("#book-frame").data("book-id");
-        let chapterData = await readChapter(bookId, parseInt(getSavedChapter(bookId)) + 1);
+        let chapterData = await getChapter(bookId, parseInt(getSavedChapter(bookId)) + 1);
         saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
-        console.log(chapterData);
-        $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
+
+        displayChapter(chapterData);
     });
 
     $("#previous-chapter").click(async function () {
         let bookId = $("#book-frame").data("book-id");
-        let chapterData = await readChapter(bookId, parseInt(getSavedChapter(bookId)) - 1);
+        let chapterData = await getChapter(bookId, parseInt(getSavedChapter(bookId)) - 1);
         saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
-        console.log(chapterData);
-        $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
+
+        displayChapter(chapterData);
     });
 
     $("#closeBookViewer").click(function () {
