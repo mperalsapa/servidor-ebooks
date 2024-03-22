@@ -8,9 +8,8 @@ export class GDriveClient {
 
     client;
     clientDirId = "root";
-    defaultClientDirName = "ebooks";
 
-    constructor(CREDENTIALS_PATH = null, CLIENT_DIR_ID = null) {
+    constructor(CREDENTIALS_PATH = null, CLIENT_DIR_ID = "root") {
         if (CREDENTIALS_PATH) {
             this.CREDENTIALS_PATH = CREDENTIALS_PATH;
         }
@@ -34,7 +33,7 @@ export class GDriveClient {
         const files = res.data.files;
         if (files.length === 0) {
             console.error('GDRIVE - Searching parent folder: No files found.');
-            this.createDir(this.defaultClientDirName);
+            this.clientDirId = "root";
             this.findDirId();
             return;
         }
@@ -125,8 +124,8 @@ export class GDriveClient {
             console.error('Error fileId not specified');
             return;
         }
-       return await this.client.files.delete({
-         
+        return await this.client.files.delete({
+
             fileId: fileId,
         });
     }

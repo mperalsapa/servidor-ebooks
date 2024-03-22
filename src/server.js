@@ -121,8 +121,8 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const fileId = req.params.fileId;
     const chapter = req.params.chapter;
     const ebookPath = path.resolve(ebooksPath, fileId);
-    const unzippedPath = path.join(ebookPath, 'unzipped');
-    
+    // const unzippedPath = path.join(ebookPath, 'unzipped');
+
     /*
     try{
       const epubData = fs.readFileSync(path.resolve('../ebooks', fileId + '.epub')); 
@@ -142,19 +142,20 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
 
     */
 
-    
+
     // comprovem si el llibre existeix en el sistema de fitxers local
-    if (!fs.existsSync(unzippedPath)) {
+    if (!fs.existsSync(ebookPath)) {
         // si no existeix, el descarreguem de Google Drive
         // const book = await gdrive.downloadFile(fileId);
         // gdrive.downloadFile(fileId, 'temp/downloads', book.name);
         // unzip en public/assets
         console.log("Llibre no existeix, instalant...")
-       // return res.send("Book doesn't exist, downloading...");
+        // return res.send("Book doesn't exist, downloading...");
 
         try {
             //drive epub
             const book = await gdrive.downloadFile(fileId);
+            console.log(book);
             const epubPath = path.join(ebookPath, book.name);
             await gdrive.downloadFile(fileId, ebookPath, book.name);
 
@@ -171,14 +172,18 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     }
 
 
-    
+
     const chapterData = await EPUB.readChapter(ebookPath, chapter);
     const chapterPath = path.join(fileId, chapterData.chapterPath);
     return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
 
 
-    
+
 })
+
+// await gdrive.deleteFile("1-VBhFFDesCQNiOxvrlIE9VbggZjP4LB4");
+// await gdrive.deleteFile("1wBkvElVkSwzk3zrKCgQym187FHKQIlRT");
+// console.log(await gdrive.getAllChildren());
 
 app.listen(3000, () => {
     console.log("Server started on http://localhost:3000");
