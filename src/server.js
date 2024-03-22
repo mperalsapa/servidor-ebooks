@@ -120,6 +120,26 @@ app.delete('/eliminarArxiu/:fileId', async (req, res) => {
 app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const fileId = req.params.fileId;
     const chapter = req.params.chapter;
+    const ebookPath = path.resolve(ebooksPath, fileId);
+
+    try{
+      const epubData = fs.readFileSync(path.resolve('../ebooks', fileId + '.epub')); 
+      await zip.loadAsync(epubData);
+      const unzippedPath = ebooksPath; 
+      await zip.extractAllToAsync(unzippedPath, { createFolders: true });
+      console.log('Book unzipped successfully');
+    } catch (error) {
+        console.error('Error unzipping book:', error);
+        return res.status(500).send('Error processing book');
+    }
+
+    
+    const chapterData = await EPUB.readChapter(ebookPath, chapter);
+    const chapterPath = path.join(fileId, chapterData.chapterPath);
+    return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
+
+
+    /*
     // comprovem si el llibre existeix en el sistema de fitxers local
     if (!fs.existsSync(path.resolve(ebooksPath, `${fileId}`))) {
         // si no existeix, el descarreguem de Google Drive
@@ -127,13 +147,28 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
         // gdrive.downloadFile(fileId, 'temp/downloads', book.name);
         // unzip en public/assets
         console.log("Book doesn't exist, downloading...")
-        return res.send("Book doesn't exist, downloading...");
+       // return res.send("Book doesn't exist, downloading...");
+
+        try {
+            const epubData = fs.readFileSync(ebookPath);
+            const zip = new JSZip();
+            await zip.loadAsync(epubData);
+            await zip.extractAllToAsync(unzippedPath, { createFolders: true });
+            console.log('Book unzipped successfully');
+        } catch (error) {
+            console.error('Error unzipping book:', error);
+            return res.status(500).send('Error unzipping book');
+        }
     }
 
-    const ebookPath = path.resolve(ebooksPath, fileId);
+
+    
     const chapterData = await EPUB.readChapter(ebookPath, chapter);
     const chapterPath = path.join(fileId, chapterData.chapterPath);
     return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
+*/
+
+    
 })
 
 app.listen(3000, () => {
