@@ -149,7 +149,7 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
         // const book = await gdrive.downloadFile(fileId);
         // gdrive.downloadFile(fileId, 'temp/downloads', book.name);
         // unzip en public/assets
-        console.log("Book doesn't exist, downloading...")
+        console.log("Llibre no existeix, instalant...")
        // return res.send("Book doesn't exist, downloading...");
 
         try {
@@ -163,10 +163,10 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
             const zip = new JSZip();
             await zip.loadAsync(epubData);
             await zip.extractAllToAsync(unzippedPath, { createFolders: true });
-            console.log('Book unzipped successfully');
+            console.log('Llibre descomprimit');
         } catch (error) {
             console.error('Error unzipping book:', error);
-            return res.status(500).send('Error unzipping book');
+            return res.status(500).send('Error al descomprimir');
         }
     }
 
