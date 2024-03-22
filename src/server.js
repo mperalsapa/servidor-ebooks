@@ -121,7 +121,9 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const fileId = req.params.fileId;
     const chapter = req.params.chapter;
     const ebookPath = path.resolve(ebooksPath, fileId);
-
+    const unzippedPath = path.join(ebookPath, 'unzipped');
+    
+    /*
     try{
       const epubData = fs.readFileSync(path.resolve('../ebooks', fileId + '.epub')); 
       await zip.loadAsync(epubData);
@@ -138,10 +140,11 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const chapterPath = path.join(fileId, chapterData.chapterPath);
     return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
 
+    */
 
-    /*
+    
     // comprovem si el llibre existeix en el sistema de fitxers local
-    if (!fs.existsSync(path.resolve(ebooksPath, `${fileId}`))) {
+    if (!fs.existsSync(unzippedPath)) {
         // si no existeix, el descarreguem de Google Drive
         // const book = await gdrive.downloadFile(fileId);
         // gdrive.downloadFile(fileId, 'temp/downloads', book.name);
@@ -150,7 +153,13 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
        // return res.send("Book doesn't exist, downloading...");
 
         try {
-            const epubData = fs.readFileSync(ebookPath);
+            //drive epub
+            const book = await gdrive.downloadFile(fileId);
+            const epubPath = path.join(ebookPath, book.name);
+            await gdrive.downloadFile(fileId, ebookPath, book.name);
+
+            //descomprimir
+            const epubData = fs.readFileSync(epubPath);
             const zip = new JSZip();
             await zip.loadAsync(epubData);
             await zip.extractAllToAsync(unzippedPath, { createFolders: true });
@@ -166,7 +175,7 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const chapterData = await EPUB.readChapter(ebookPath, chapter);
     const chapterPath = path.join(fileId, chapterData.chapterPath);
     return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
-*/
+
 
     
 })
