@@ -10,15 +10,19 @@ import fs from 'fs';
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ebooksPath = path.resolve(__dirname, '../ebooks');
 
-// create ebooks folder if it doesn't exist
-if (!fs.existsSync(ebooksPath)) fs.mkdirSync(ebooksPath);
 // set root to public folder
 const publicRoot = __dirname + "/public";
 
 // get previous directory to current one 
 const projectPath = path.resolve(__dirname, '..');
+
+// create ebooks folder if it doesn't exist
+const ebooksPath = path.resolve(projectPath, '../ebooks');
+if (!fs.existsSync(ebooksPath)) fs.mkdirSync(ebooksPath);
+// set temp route
+const tempPath = path.resolve(projectPath, 'temp');
+if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath);
 
 // setup static files
 app.use("/assets", express.static(path.resolve(publicRoot, "assets")));
@@ -154,10 +158,12 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
 
         try {
             //drive epub
-            const book = await gdrive.downloadFile(fileId);
+            console.log(fileId);
+            console.log(chapter)
+            console.log(await gdrive.getAllChildren());
+            const book = await gdrive.downloadFile(fileId, tempPath);
             console.log(book);
-            const epubPath = path.join(ebookPath, book.name);
-            await gdrive.downloadFile(fileId, ebookPath, book.name);
+            const epubPath = path.join(tempPath, fileId);
 
             //descomprimir
             const epubData = fs.readFileSync(epubPath);

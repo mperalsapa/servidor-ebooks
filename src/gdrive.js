@@ -146,25 +146,21 @@ export class GDriveClient {
         if (!fileName) {
             fileName = fileId;
         }
-
+        console.log(`Downloading file to: ${route}/${fileName}`);
         const dest = fs.createWriteStream(`${route}/${fileName}`);
-        await this.client.files.get(
-            { fileId: fileId },
-            { responseType: 'stream' },
-            (err, res) => {
-                if (err) {
-                    console.error('Error downloading file:', err);
-                    return;
-                }
-                res.data
-                    .on('end', () => {
-                        console.log('File downloaded');
-                    })
-                    .on('error', (err) => {
-                        console.error('Error downloading file:', err);
-                    })
-                    .pipe(dest);
-            }
+        const response = await this.client.files.get(
+            { fileId: fileId, alt: 'media' },
+            { responseType: 'stream' }
         );
+
+        response.data.on('end', () => {
+            console.log('File downloaded');
+        });
+
+        response.data.on('error', (err) => {
+            console.error('Error downloading file:', err);
+        });
+
+        response.data.pipe(dest);
     }
 }
