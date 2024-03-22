@@ -3,7 +3,6 @@ import express from "express";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from "multer";
-import JSZip from "jszip";
 import * as EPUB from "./epub.js";
 import fs from 'fs';
 import admZip from 'adm-zip';
@@ -33,21 +32,22 @@ app.use("/ebooks", express.static(ebooksPath));
 // setup gdrive
 const gdrive = new GDriveClient(path.resolve(projectPath, './credentials.json'));
 
-// Configurar Multer para manejar la carga de archivos
+// Configurar Multer per administrar la carrega de fitxers
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'temp/'); // Define el directorio donde se almacenarán los archivos
+        cb(null, 'temp/'); // defineix el directori on s'emmagatzemaran els fitxers temporals
     },
-    filename: function (req, file, cb) { // Define el nombre del archivo. Respetando el nombre original reemplazando espacios por guiones bajos
+    filename: function (req, file, cb) { // defineix el nom del fitxer
         cb(null, file.originalname.replace(/ /g, "_"));
     }
 });
-// Función para filtrar los archivos por tipo MIME
+
+// Funcio per filtrar els fitxers per tipus MIME
 const fileFilter = function (req, file, cb) {
     if (file.mimetype === 'application/epub+zip' || file.mimetype === 'application/octet-stream') {
-        cb(null, true); // Aceptar el archivo si es un archivo epub
+        cb(null, true); // Acceptar el fitxer nomes si es de tipus epub
     } else {
-        cb(new Error('El archivo debe ser de tipo epub'), false); // Rechazar el archivo si no es un archivo epub
+        cb(new Error('El archivo debe ser de tipo epub'), false); // Rebutjar si no es de tipus epub
     }
 };
 
@@ -55,10 +55,6 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter
 });
-
-// configuracio de JSZIP
-
-const zip = new JSZip();
 
 // setup express routes -------------------------------------------
 
@@ -68,10 +64,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/llibres", (req, res) => {
-
     res.sendFile("client.html", { root: publicRoot });
 });
 
+// Metode per obtenir la llista de llibres disponibles
 app.get("/books", (req, res) => {
     const books = gdrive.getAllChildren();
 
@@ -85,6 +81,8 @@ app.get("/administrador", (req, res) => {
     res.sendFile("administrador.html", { root: publicRoot });
 });
 
+// Metode per pujar un llibre a Google Drive
+// disponible per a l'administrador
 app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
     if (!req.file) {
         return res.status(400).send('No se ha seleccionado ningún archivo');
@@ -109,11 +107,11 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
         console.error('Error fetching files:', error);
     }
 
-
     res.json({ ok: true });
 });
 
-
+// Metode per eliminar un arxiu de Google Drive
+// disponible per a l'administrador
 app.delete('/eliminarArxiu/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
     await gdrive.deleteFile(fileId);
@@ -122,31 +120,13 @@ app.delete('/eliminarArxiu/:fileId', async (req, res) => {
 
 });
 
+// Metode encarregat de llegir un capitol d'un llibre.
+// En cas de no tenir el llibre descarregat, el descarrega de Google Drive
+// el descomprimeix i llegeix el capitol demanat per retornar-lo al client.
 app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const fileId = req.params.fileId;
     const chapter = req.params.chapter;
     const ebookPath = path.resolve(ebooksPath, fileId);
-    // const unzippedPath = path.join(ebookPath, 'unzipped');
-
-    /*
-    try{
-      const epubData = fs.readFileSync(path.resolve('../ebooks', fileId + '.epub')); 
-      await zip.loadAsync(epubData);
-      const unzippedPath = ebooksPath; 
-      await zip.extractAllToAsync(unzippedPath, { createFolders: true });
-      console.log('Book unzipped successfully');
-    } catch (error) {
-        console.error('Error unzipping book:', error);
-        return res.status(500).send('Error processing book');
-    }
-
-    
-    const chapterData = await EPUB.readChapter(ebookPath, chapter);
-    const chapterPath = path.join(fileId, chapterData.chapterPath);
-    return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
-
-    */
-
 
     // comprovem si el llibre existeix en el sistema de fitxers local
     if (!fs.existsSync(ebookPath)) {
@@ -155,33 +135,32 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
         // gdrive.downloadFile(fileId, 'temp/downloads', book.name);
         // unzip en public/assets
         console.log("Llibre no existeix, instalant...")
-        // return res.send("Book doesn't exist, downloading...");
-
         try {
-            //drive epub
-            console.log(fileId);
-            console.log(chapter)
-            console.log(await gdrive.getAllChildren());
-            let fileName = fileId + '.epub';
-            gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
-            return;
-            console.log("Llibre descarregat")
+            // let fileName = fileId + '.epub';
+            // gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
+            // return
 
-            let epubPath = path.resolve(tempPath, fileId + '.epub');
-            //descomprimir
-            console.log("ebookPath: " + epubPath);
+            // esperem la promesa de descarrega del fitxer
+            try {
+                await gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
+            } catch (error) {
+                console.error('Error downloading book:', error);
+                return res.status(500).send('Error downloading book');
+            }
 
+            let epubPath = path.resolve(tempPath, fileId);
             if (!fs.existsSync(epubPath)) throw new Error('File not found');
             const zip = new admZip(epubPath);
             zip.extractAllTo(ebookPath, true);
-            // console.log("Readed file: " + epubData)
-            // console.log(epubData);
-            // await EPUB.unzip(epubPath, ebookPath);
-
-            // const zip = new JSZip();
-            // await zip.loadAsync(epubData);
-            // await zip.extractAllToAsync(ebookPath, { createFolders: true });
             console.log('Llibre descomprimit');
+            // esborrem el fitxer zip
+            fs.unlink(epubPath, (err) => {
+                if (err) {
+                    console.error('Error deleting file:', err);
+                    return;
+                }
+                console.log('File deleted');
+            });
         } catch (error) {
             console.error('Error unzipping book:', error);
             return res.status(500).send('Error al descomprimir');
@@ -194,14 +173,7 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
     const chapterData = await EPUB.readChapter(ebookPath, chapter);
     const chapterPath = path.join(fileId, chapterData.chapterPath);
     return res.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
-
-
-
 })
-
-// await gdrive.deleteFile("1-VBhFFDesCQNiOxvrlIE9VbggZjP4LB4");
-// await gdrive.deleteFile("1wBkvElVkSwzk3zrKCgQym187FHKQIlRT");
-// console.log(await gdrive.getAllChildren());
 
 app.listen(3000, () => {
     console.log("Server started on http://localhost:3000");

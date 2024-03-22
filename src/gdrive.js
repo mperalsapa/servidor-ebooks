@@ -4,6 +4,8 @@ import path from 'node:path';
 import admZip from 'adm-zip';
 import * as EPUB from './epub.js';
 
+// Classe encarregada de gestionar la connexió amb Google Drive
+// i de proporcionar els mètodes necessaris per interactuar amb els fitxers.
 export class GDriveClient {
     CREDENTIALS_PATH = 'config/secrets/token.json';
 
@@ -50,6 +52,7 @@ export class GDriveClient {
         }
     }
 
+    // Funció per crear un client de Google Drive
     createDriveClient(credentials) {
         if (!credentials) {
             console.error("Credentials file not found. You need to specify a credentials file path.");
@@ -61,6 +64,7 @@ export class GDriveClient {
         return google.drive({ version: "v3", auth });
     }
 
+    // Funció per obtenir la llista de fitxers d'un directori
     async getAllChildren(folderId = this.clientDirId) {
         if (!this.client) {
             console.error('Error client not found');
@@ -76,6 +80,7 @@ export class GDriveClient {
         return files;
     }
 
+    // Funció per crear un directori
     async createDir(folderName, parentId = this.clientDirId) {
         if (!this.client) {
             console.error('Error client not found');
@@ -95,6 +100,7 @@ export class GDriveClient {
 
     }
 
+    // Funció per pujar un fitxer a Google Drive
     async uploadFile(file) {
         if (!this.client) {
             console.error('Error client not found');
@@ -116,6 +122,7 @@ export class GDriveClient {
         return response.data;
     }
 
+    // Funció per eliminar un fitxer de Google Drive
     async deleteFile(fileId) {
         if (!this.client) {
             console.error('Error client not found');
@@ -131,6 +138,7 @@ export class GDriveClient {
         });
     }
 
+    // Funció per descarregar un fitxer de Google Drive
     async downloadFile(fileId, downloadPath, ebooksPath, httpResponse = null, chapter = 0) {
         if (!this.client) {
             console.error('Error client not found');
@@ -160,14 +168,23 @@ export class GDriveClient {
 
         response.data
             .on("end", () => {
-                console.log("Done.");
-                this.downloadCallback(fileId, epubPath, ebookPath, httpResponse, chapter);
+                console.log("Done downloading.");
+                // this.downloadCallback(fileId, epubPath, ebookPath, httpResponse, chapter);
             })
             .on("error", (err) => {
                 console.log(err);
                 // process.exit();
             })
             .pipe(dest);
+
+        return new Promise((resolve, reject) => {
+            dest.on('finish', () => {
+                resolve();
+            });
+            dest.on('error', (err) => {
+                reject(err);
+            });
+        });
     }
 
     async downloadCallback(fileId, epubPath, ebookPath, httpResponse, chapter = 0) {
