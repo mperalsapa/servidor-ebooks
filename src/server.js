@@ -6,6 +6,7 @@ import multer from "multer";
 import JSZip from "jszip";
 import * as EPUB from "./epub.js";
 import fs from 'fs';
+import admZip from 'adm-zip';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -18,7 +19,7 @@ const publicRoot = __dirname + "/public";
 const projectPath = path.resolve(__dirname, '..');
 
 // create ebooks folder if it doesn't exist
-const ebooksPath = path.resolve(projectPath, '../ebooks');
+const ebooksPath = path.resolve(projectPath, 'ebooks');
 if (!fs.existsSync(ebooksPath)) fs.mkdirSync(ebooksPath);
 // set temp route
 const tempPath = path.resolve(projectPath, 'temp');
@@ -161,15 +162,25 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
             console.log(fileId);
             console.log(chapter)
             console.log(await gdrive.getAllChildren());
-            const book = await gdrive.downloadFile(fileId, tempPath);
-            console.log(book);
-            const epubPath = path.join(tempPath, fileId);
+            let fileName = fileId + '.epub';
+            gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
+            return;
+            console.log("Llibre descarregat")
 
+            let epubPath = path.resolve(tempPath, fileId + '.epub');
             //descomprimir
-            const epubData = fs.readFileSync(epubPath);
-            const zip = new JSZip();
-            await zip.loadAsync(epubData);
-            await zip.extractAllToAsync(unzippedPath, { createFolders: true });
+            console.log("ebookPath: " + epubPath);
+
+            if (!fs.existsSync(epubPath)) throw new Error('File not found');
+            const zip = new admZip(epubPath);
+            zip.extractAllTo(ebookPath, true);
+            // console.log("Readed file: " + epubData)
+            // console.log(epubData);
+            // await EPUB.unzip(epubPath, ebookPath);
+
+            // const zip = new JSZip();
+            // await zip.loadAsync(epubData);
+            // await zip.extractAllToAsync(ebookPath, { createFolders: true });
             console.log('Llibre descomprimit');
         } catch (error) {
             console.error('Error unzipping book:', error);
@@ -177,7 +188,8 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
         }
     }
 
-
+    console.log("Llibre instal·lat")
+    console.log("Llegint capítol: ", ebookPath, chapter)
 
     const chapterData = await EPUB.readChapter(ebookPath, chapter);
     const chapterPath = path.join(fileId, chapterData.chapterPath);

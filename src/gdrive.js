@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import { google } from 'googleapis';
-
-
+import path from 'node:path';
+import admZip from 'adm-zip';
+import * as EPUB from './epub.js';
 
 export class GDriveClient {
     CREDENTIALS_PATH = 'config/secrets/token.json';
@@ -130,7 +131,7 @@ export class GDriveClient {
         });
     }
 
-    async downloadFile(fileId, route, fileName) {
+    async downloadFile(fileId, downloadPath, ebooksPath, httpResponse = null, chapter = 0) {
         if (!this.client) {
             console.error('Error client not found');
             return;
@@ -139,28 +140,43 @@ export class GDriveClient {
             console.error('Error fileId not specified');
             return;
         }
-        if (!route) {
+        if (!downloadPath) {
             console.error('Error route not specified');
             return;
         }
-        if (!fileName) {
-            fileName = fileId;
+        if (!ebooksPath) {
+            console.error('Error route not specified');
+            return;
         }
-        console.log(`Downloading file to: ${route}/${fileName}`);
-        const dest = fs.createWriteStream(`${route}/${fileName}`);
+
+        console.log(`Downloading file to: ${downloadPath}/${fileId}`);
+        let epubPath = path.resolve(downloadPath, fileId);
+        let ebookPath = path.resolve(ebooksPath, fileId);
+        const dest = fs.createWriteStream(epubPath);
         const response = await this.client.files.get(
-            { fileId: fileId, alt: 'media' },
-            { responseType: 'stream' }
+            { fileId: fileId, alt: "media" },
+            { responseType: "stream" }
         );
 
-        response.data.on('end', () => {
-            console.log('File downloaded');
-        });
+        response.data
+            .on("end", () => {
+                console.log("Done.");
+                this.downloadCallback(fileId, epubPath, ebookPath, httpResponse, chapter);
+            })
+            .on("error", (err) => {
+                console.log(err);
+                // process.exit();
+            })
+            .pipe(dest);
+    }
 
-        response.data.on('error', (err) => {
-            console.error('Error downloading file:', err);
-        });
+    async downloadCallback(fileId, epubPath, ebookPath, httpResponse, chapter = 0) {
+        if (!fs.existsSync(epubPath)) throw new Error('File not found');
+        const zip = new admZip(epubPath);
+        zip.extractAllTo(ebookPath, true);
 
-        response.data.pipe(dest);
+        const chapterData = await EPUB.readChapter(ebookPath, chapter);
+        const chapterPath = path.join(fileId, chapterData.chapterPath);
+        return httpResponse.json({ bookId: fileId, chapterPath: chapterPath, chapter: chapterData.chapterId, chapters: chapterData.chapters });
     }
 }

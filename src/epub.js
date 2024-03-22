@@ -1,6 +1,7 @@
 import { DOMParser } from 'xmldom';
 import fs from 'fs';
 import path from 'path';
+import JSZip from 'jszip';
 
 export async function readChapter(ebookPath, chapter = 0) {
     if (!chapter || chapter == 0) {
@@ -49,4 +50,39 @@ export async function readChapter(ebookPath, chapter = 0) {
         return { chapterId: chapter, chapterPath: path.join('OEBPS', chapterPath), chapters: chapters.length };
     }
     return { chapterId: chapter, chapterPath: path.join(chapterPath), chapters: chapters.length };
+}
+
+export async function unzip(zipFile, outputFolder) {
+    JSZip.loadAsync(zipFile) // Load the zip file asynchronously
+        .then(function (zip) {
+            // Extract all files from the zip file
+            return Promise.all(Object.keys(zip.files).map(function (filename) {
+                return zip.files[filename].async('uint8array'); // Get file as Uint8Array
+            }));
+        })
+        .then(function (fileDataArray) {
+            // Create a new Blob object containing the extracted files
+            var zipBlob = new Blob(fileDataArray, { type: 'application/zip' });
+
+            // Create a temporary URL for the Blob
+            var zipURL = URL.createObjectURL(zipBlob);
+
+            // Create a link element
+            var link = document.createElement('a');
+            link.href = zipURL;
+
+            // Set the download attribute to specify the file name
+            link.download = 'unzipped_files.zip';
+
+            // Simulate a click to trigger the download
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up
+            document.body.removeChild(link);
+            URL.revokeObjectURL(zipURL);
+        })
+        .catch(function (error) {
+            console.error('Error unzipping file:', error);
+        });
 }
