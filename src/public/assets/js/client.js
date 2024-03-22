@@ -20,6 +20,11 @@ function displayChapter(chapterData) {
     });
 }
 
+function clearIframe() {
+    $("#book-frame").attr("src", "");
+
+}
+
 function getSavedChapter(bookId) {
     // read from local storage if a stored chapter exists based on bookId
     if (localStorage.getItem(bookId)) {
@@ -51,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     $(".book-list button").click(async function () {
         let bookId = $(this).data("id");
+        clearIframe();
         $("#book-frame").data("book-id", bookId);
         $(".modal-title").text($(this).text());
         $("#book-viewer").modal("show");
