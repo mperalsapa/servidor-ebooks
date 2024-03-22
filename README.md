@@ -37,6 +37,7 @@ També, cada vegada que visiti un capitol, es guardará automaticament.
 - [x] Client
     - [x] Llistar Llibres
     - [x] Llegir Llibre
+    - [ ] Afegir "autenticacio" per a que els usuaris puguin continuar llegint des d'on ho van deixar en un altre dispositiu
 
 
 
