@@ -2,6 +2,13 @@
 
 Aquest projecte te com a proposit proveir d'una plataforma per administrar i donar access a EBooks.
 
+L'usabilitat d'aquesta plataforma es divideix en dues seccions, una per l'administrador i una per l'usuari.
+## Administrador
+L'administrador pot afegir llibres, esborrar-los i veure la llista de llibres disponibles des del panell d'administracio.
+
+## Usuari
+L'usuari pot veure la llista de llibres disponibles i llegir-los. A més, cada vegada que l'usuari llegeixi un capitol, es guardará automaticament per a que pugui continuar llegint des d'on ho va deixar en un altre dispositiu. Per poder emmagatzemar l'estat de lectura, s'ha de introduir el nom d'usuari. Aquest nom d'usuari es guardará a la base de dades, i es fará servir per identificar l'usuari.
+
 # Configuracio
 ## Configuracio d'autenticacio amb Google Drive
 Primer de tot, s'ha de crear un compte de serveis en la plataforma de Google Cloud, i descarregar el fitxer `credentials.json`. Aquest fitxer s'ha de guardar a l'arrel del projecte. Aquest fitxer es necessari per poder accedir a Google Drive.
@@ -37,7 +44,4 @@ També, cada vegada que visiti un capitol, es guardará automaticament.
 - [x] Client
     - [x] Llistar Llibres
     - [x] Llegir Llibre
-    - [ ] Afegir "autenticacio" per a que els usuaris puguin continuar llegint des d'on ho van deixar en un altre dispositiu
-
-
-
+    - [x] Afegir "autenticacio" per a que els usuaris puguin continuar llegint des d'on ho van deixar en un altre dispositiu
