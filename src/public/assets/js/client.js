@@ -1,7 +1,18 @@
 import * as BooksAPI from './books.js';
 
-async function getChapter(bookId, chapter = 1) {
-    let response = await fetch(`/llibre/${bookId}/${chapter}`);
+async function getChapter(bookId, chapter = -1) {
+    let userName = $("#userName").val();
+    if (!userName) {
+        userName = "anonymous";
+    };
+
+    let response;
+    if (chapter < 1) {
+        response = await fetch(`/llibre/${bookId}/${chapter}?un=${userName}&continue=true`);
+    } else {
+        response = await fetch(`/llibre/${bookId}/${chapter}?un=${userName}`);
+    }
+
     let data = await response.json();
     return data;
 }
@@ -61,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         $(".modal-title").text($(this).text());
         $("#book-viewer").modal("show");
 
-        let chapterData = await getChapter(bookId, getSavedChapter(bookId));
+        let chapterData = await getChapter(bookId);
         saveChapter(bookId, Math.max(1, Math.min(chapterData.chapter, chapterData.chapters)));
 
         displayChapter(chapterData);

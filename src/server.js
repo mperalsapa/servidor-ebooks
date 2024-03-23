@@ -6,6 +6,7 @@ import multer from "multer";
 import * as EPUB from "./epub.js";
 import fs from 'fs';
 import admZip from 'adm-zip';
+import * as CS from './client-state.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +32,9 @@ app.use("/ebooks", express.static(ebooksPath));
 
 // setup gdrive
 const gdrive = new GDriveClient(path.resolve(projectPath, './credentials.json'));
+
+// Setup client state storage
+const clientState = new CS.clientStateStorage();
 
 // Configurar Multer per administrar la carrega de fitxers
 const storage = multer.diskStorage({
@@ -124,8 +128,27 @@ app.delete('/eliminarArxiu/:fileId', async (req, res) => {
 // En cas de no tenir el llibre descarregat, el descarrega de Google Drive
 // el descomprimeix i llegeix el capitol demanat per retornar-lo al client.
 app.get("/llibre/:fileId/:chapter", async (req, res) => {
+
+    let chapter = req.params.chapter;
+    const userName = req.query.un;
+    const continueReading = req.query.continue || false;
+    console.log("Usuari: ", userName, "Continuar: ", continueReading)
+    // comprovem si l'usuari vol continuar llegint
+    if (continueReading) {
+        chapter = clientState.getSavedChapter(userName, req.params.fileId);
+        console.log("Continuant lectura a capítol: ", chapter)
+    } else { // si no vol continuar llegint, guardem l'estat d'aquesta peticio
+        if (!userName || userName !== 'anonymous') {
+            try {
+                clientState.saveClientBookState(userName, req.params.fileId, req.params.chapter);
+            } catch (error) {
+                console.error('Error saving client book state:', error);
+            }
+        }
+    }
+
+    // obtenim el path del llibre
     const fileId = req.params.fileId;
-    const chapter = req.params.chapter;
     const ebookPath = path.resolve(ebooksPath, fileId);
 
     // comprovem si el llibre existeix en el sistema de fitxers local
@@ -136,10 +159,6 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
         // unzip en public/assets
         console.log("Llibre no existeix, instalant...")
         try {
-            // let fileName = fileId + '.epub';
-            // gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
-            // return
-
             // esperem la promesa de descarrega del fitxer
             try {
                 await gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
