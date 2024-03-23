@@ -63,7 +63,7 @@ const upload = multer({
 // setup express routes -------------------------------------------
 
 app.get("/", (req, res) => {
-    // read index.html inside public
+
     res.sendFile("index.html", { root: publicRoot });
 });
 
@@ -81,7 +81,7 @@ app.get("/books", (req, res) => {
 });
 
 app.get("/administrador", (req, res) => {
-    // read index.html inside public
+
     res.sendFile("administrador.html", { root: publicRoot });
 });
 
@@ -92,7 +92,6 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
         return res.status(400).send('No se ha seleccionado ningún archivo');
     }
     try {
-        // await gdrive.getAllChildren();
         let fileObject = {
             name: req.file.filename,
             path: req.file.path,
