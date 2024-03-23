@@ -169,11 +169,9 @@ export class GDriveClient {
         response.data
             .on("end", () => {
                 console.log("Done downloading.");
-                // this.downloadCallback(fileId, epubPath, ebookPath, httpResponse, chapter);
             })
             .on("error", (err) => {
                 console.log(err);
-                // process.exit();
             })
             .pipe(dest);
 

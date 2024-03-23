@@ -8,11 +8,9 @@ async function getChapter(bookId, chapter = 1) {
 
 function displayChapter(chapterData) {
     $("#book-frame").attr("src", `/ebooks/${chapterData.chapterPath}`);
-    // set iframe document styles
+    
     $("#book-frame").on("load", function () {
         let iframe = $("#book-frame").contents();
-        // iframe.find("body").css("background-color", "black");
-        // iframe.find("body").css("color", "white");
         iframe.find("body").css("font-family", "Arial, sans-serif");
         iframe.find("body").css("font-size", "1.2em");
         iframe.find("body").css("max-width", "21cm");

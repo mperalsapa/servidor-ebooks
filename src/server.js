@@ -59,7 +59,7 @@ const upload = multer({
 // setup express routes -------------------------------------------
 
 app.get("/", (req, res) => {
-    // read index.html inside public
+    
     res.sendFile("index.html", { root: publicRoot });
 });
 
@@ -77,7 +77,7 @@ app.get("/books", (req, res) => {
 });
 
 app.get("/administrador", (req, res) => {
-    // read index.html inside public
+    
     res.sendFile("administrador.html", { root: publicRoot });
 });
 
@@ -88,7 +88,6 @@ app.post('/uploadBook', upload.single('book'), async (req, res, next) => {
         return res.status(400).send('No se ha seleccionado ningún archivo');
     }
     try {
-        // await gdrive.getAllChildren();
         let fileObject = {
             name: req.file.filename,
             path: req.file.path,
@@ -136,11 +135,7 @@ app.get("/llibre/:fileId/:chapter", async (req, res) => {
         // unzip en public/assets
         console.log("Llibre no existeix, instalant...")
         try {
-            // let fileName = fileId + '.epub';
-            // gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
-            // return
-
-            // esperem la promesa de descarrega del fitxer
+            
             try {
                 await gdrive.downloadFile(fileId, tempPath, ebooksPath, res, chapter);
             } catch (error) {
