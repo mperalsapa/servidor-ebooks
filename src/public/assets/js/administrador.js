@@ -1,7 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     mostrarArxius();
 });
-
+/**
+ * Aquesta funció es fa responsable de fer una sol·licitud per obtenir una llista de llibres a través de la crida a /books 
+ * utilitzant la funció fetch(). Un cop s'obté la resposta, els llibres es mostren en una taula en el document HTML.
+ */
 function mostrarArxius() {
     const tbody = document.getElementById('arxius');
     tbody.innerHTML = ''; 
@@ -15,7 +18,7 @@ function mostrarArxius() {
             td.textContent = file.name;
             const botoEliminar = document.createElement('button');
             botoEliminar.textContent = 'Eliminar';
-            botoEliminar.addEventListener('click',() => {
+            botoEliminar.addEventListener('click',() => { //Eliminar fitxers
                 fetch(`/eliminarArxiu/${file.id}`, {method: 'DELETE'})
                 .then(response => {
                     if(response.ok) {
@@ -33,6 +36,7 @@ function mostrarArxius() {
     });
 }
 
+//Gestió de fitxers en arrossegar i soltar
 document.addEventListener('DOMContentLoaded',() =>{
     const dropzone = document.getElementById('dropzone');
 
@@ -53,10 +57,14 @@ document.addEventListener('DOMContentLoaded',() =>{
     });
 });
 
+/**Aquesta funció pren una llista de fitxers i crida a 
+* pujarArxiu(file) per a cadascun d'ells
+ */
 function gestionarArxius(files) {
     ([...files]).forEach(pujarArxiu);
 }
 
+// Aquesta funció s'encarrega de pujar un fitxer al servidor
 function pujarArxiu(file) {
     let url = './uploadBook';
     let formData = new FormData();
