@@ -12,6 +12,14 @@ L'administrador pot afegir llibres, esborrar-los i veure la llista de llibres di
 L'usuari pot veure la llista de llibres disponibles i llegir-los. A més, cada vegada que l'usuari llegeixi un capitol, es guardará automaticament per a que pugui continuar llegint des d'on ho va deixar en un altre dispositiu. Per poder emmagatzemar l'estat de lectura, s'ha de introduir el nom d'usuari. Aquest nom d'usuari es guardará a la base de dades, i es fará servir per identificar l'usuari.
 
 # Configuracio
+## Instal·lacio de paquets
+Per poder fer servir aquiest projecte, s'ha de fer servir NodeJS amb els paquets indicats en package.json. Per instal·lar els paquets, s'ha de fer servir la següent comanda:
+```bash
+npm install
+```
+
+> **Nota:** Aquest projecte s'ha desenvolupat fent servir `NodeJS 20.11`. No es garanteix el funcionament correcte amb versions anteriors.
+
 ## Configuracio d'autenticacio amb Google Drive
 Primer de tot, s'ha de crear un compte de serveis en la plataforma de Google Cloud, i descarregar el fitxer `credentials.json`. Aquest fitxer s'ha de guardar a l'arrel del projecte. Aquest fitxer es necessari per poder accedir a Google Drive.
 
