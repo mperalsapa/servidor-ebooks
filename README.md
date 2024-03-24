@@ -25,6 +25,12 @@ Primer de tot, s'ha de crear un compte de serveis en la plataforma de Google Clo
 
 Com a exemple d'aquest fitxer, es pot veure el fitxer [credentials.json.example](credentials.json.example).
 
+## Inicialitzacio del servidor
+Per poder inicialitzar el servidor, s'ha de fer servir la següent comanda:
+```bash
+node src/server.js
+```
+
 # Desplegament
 A l'hora de realitzar el desplegament, hem optat per fer servir Docker. Per això, s'ha inclós un fitxer [Dockerfile](Dockerfile) i un [Docker Compose](docker-compose.yaml) per facilitar el desplegament.
 Per poder desplegar el servidor, s'ha de fer servir les següents comandes:
