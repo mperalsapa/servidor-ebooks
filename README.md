@@ -1,6 +1,8 @@
 # Servidor d'EBooks
 
-Aquest projecte te com a proposit proveir d'una plataforma per administrar i donar access a EBooks.
+Aquest projecte te com a proposit proveir d'una plataforma per administrar i donar access a EBooks. Els desenvolupadors han sigut:
+- [P. Navlani](https://github.com/pnavlani)
+- [M. Peral](https://github.com/mperalsapa)
 
 L'usabilitat d'aquesta plataforma es divideix en dues seccions, una per l'administrador i una per l'usuari.
 ## Administrador
